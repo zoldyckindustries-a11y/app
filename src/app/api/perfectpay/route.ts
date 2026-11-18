@@ -6,6 +6,7 @@ import {
   retratoPorLid,
   revogarVenda,
 } from "@/lib/conta";
+import { assinaturaEstrita, conferirAssinatura } from "@/lib/assinatura";
 import { bancoConfigurado } from "@/lib/db";
 import { enviarAcesso } from "@/lib/email";
 import {
@@ -66,11 +67,53 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "sem banco" }, { status: 503 });
   }
 
+  // O corpo é lido como TEXTO: a assinatura é calculada sobre os bytes que
+  // chegaram, e reserializar o JSON mudaria espaços e ordem das chaves.
+  let cru: string;
   let p: PayloadPerfectPay;
   try {
-    p = (await req.json()) as PayloadPerfectPay;
+    cru = await req.text();
+    p = JSON.parse(cru) as PayloadPerfectPay;
   } catch {
     return NextResponse.json({ erro: "payload inválido" }, { status: 400 });
+  }
+
+  // 2. Assinatura (terceira camada). A doc da PerfectPay manda conferir o
+  //    X-Webhook-Signature contra o Signing secret, mas não publica o
+  //    algoritmo — então em modo normal a divergência é só registrada, e a
+  //    variante que bater fica gravada na venda. Depois que a primeira
+  //    entrega real revelar qual é, PERFECTPAY_ASSINATURA_ESTRITA=1 passa a
+  //    exigir. Rejeitar por palpite derrubaria todas as vendas de uma vez.
+  const segredo = process.env.PERFECTPAY_SIGNING_SECRET ?? "";
+  const header =
+    req.headers.get("x-webhook-signature") ??
+    req.headers.get("webhook-signature") ??
+    req.headers.get("svix-signature") ??
+    "";
+
+  let assinatura: string | null = null;
+  if (segredo && header) {
+    assinatura = conferirAssinatura(cru, header, segredo, {
+      id: req.headers.get("webhook-id") ?? req.headers.get("svix-id") ?? undefined,
+      timestamp:
+        req.headers.get("webhook-timestamp") ??
+        req.headers.get("svix-timestamp") ??
+        undefined,
+    });
+    if (assinatura) {
+      console.log(`[perfectpay] assinatura confere (variante ${assinatura})`);
+    } else {
+      console.warn(
+        "[perfectpay] assinatura NÃO bateu em nenhuma variante conhecida" +
+          (assinaturaEstrita() ? " — recusando (modo estrito)" : " — seguindo")
+      );
+      if (assinaturaEstrita()) {
+        return NextResponse.json({ erro: "assinatura inválida" }, { status: 401 });
+      }
+    }
+  } else if (assinaturaEstrita()) {
+    console.error("[perfectpay] modo estrito sem segredo ou sem header");
+    return NextResponse.json({ erro: "assinatura ausente" }, { status: 401 });
   }
 
   if (esperado && (p.token ?? "") !== esperado) {
@@ -98,6 +141,7 @@ export async function POST(req: Request) {
       telefone,
       email,
       produtoCode,
+      assinatura,
       payload: p,
     });
     if (!novo) {

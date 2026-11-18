@@ -291,13 +291,15 @@ export async function registrarPostback(dados: {
   telefone?: string;
   email?: string;
   produtoCode?: string;
+  /** Variante do HMAC que bateu, ou null. Ver src/lib/assinatura.ts. */
+  assinatura?: string | null;
   payload: unknown;
 }): Promise<boolean> {
   const sql = await db();
   const linhas = await sql.query(
     `insert into plataforma_vendas
-       (code, status, telefone, email, produto_code, payload)
-     values ($1, $2, $3, $4, $5, $6)
+       (code, status, telefone, email, produto_code, assinatura, payload)
+     values ($1, $2, $3, $4, $5, $6, $7)
      on conflict (code, status) do nothing
      returning code`,
     [
@@ -306,6 +308,7 @@ export async function registrarPostback(dados: {
       dados.telefone ?? null,
       dados.email ?? null,
       dados.produtoCode ?? null,
+      dados.assinatura ?? null,
       JSON.stringify(dados.payload ?? {}),
     ]
   );

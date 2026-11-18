@@ -87,6 +87,7 @@ export const ESQUEMA: string[] = [
      payload      jsonb       not null,
      primary key (code, status)
    )`,
+  `alter table plataforma_vendas add column if not exists assinatura text`,
   `create index if not exists plataforma_vendas_recebido_idx
      on plataforma_vendas (recebido_em desc)`,
   `create index if not exists plataforma_vendas_produto_idx

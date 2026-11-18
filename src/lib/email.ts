@@ -51,7 +51,16 @@ export async function enviarAcesso(dados: {
     return false;
   }
 
-  const base = (process.env.NEXT_PUBLIC_URL_APP ?? dados.origem).replace(/\/$/, "");
+  // URL_APP (variável de runtime) antes de NEXT_PUBLIC_URL_APP: o Next
+  // substitui tudo que começa com NEXT_PUBLIC_ no momento do build, então
+  // uma variável desse prefixo cadastrada só no painel da Cloudflare chega
+  // aqui como undefined. A origem da requisição é a última rede, e para o
+  // postback ela já é o próprio domínio da plataforma.
+  const base = (
+    process.env.URL_APP ??
+    process.env.NEXT_PUBLIC_URL_APP ??
+    dados.origem
+  ).replace(/\/$/, "");
   const link = `${base}/e/${dados.token}`;
   const nome = primeiroNome(dados.nome);
 

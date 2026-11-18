@@ -67,7 +67,7 @@ const sql = neon(url);
 
 if (tem("vendas")) {
   const linhas = await sql`
-    select code, status, telefone, email, produto_code, recebido_em
+    select code, status, telefone, email, produto_code, assinatura, recebido_em
       from plataforma_vendas order by recebido_em desc limit 20`;
   if (!linhas.length) {
     console.log("Nenhum postback recebido ainda.");
@@ -77,6 +77,7 @@ if (tem("vendas")) {
       console.log(
         `  ${l.recebido_em.toISOString().slice(0, 16).replace("T", " ")}  ` +
           `status=${String(l.status).padStart(2)}  produto=${l.produto_code ?? "—"}  ` +
+          `assin=${l.assinatura ?? "—"}  ` +
           `${l.telefone ?? "—"}  ${l.email ?? ""}`
       );
     }
@@ -169,7 +170,7 @@ console.log(`  alvo             : ${conta.nome || "—"} ${conta.alvoTelefone ||
 // para mandar o acesso por WhatsApp quando o e-mail não chegou.
 if (tem("link") && !tem("enviar")) {
   const token = await criarLinkAcesso(conta.telefone);
-  const base = (process.env.NEXT_PUBLIC_URL_APP ?? "https://app.zaplens.online").replace(/\/$/, "");
+  const base = (process.env.URL_APP ?? process.env.NEXT_PUBLIC_URL_APP ?? "https://app.zaplens.online").replace(/\/$/, "");
   console.log(`\nLink de entrada (30 dias):\n  ${base}/e/${token}`);
 }
 
@@ -185,7 +186,7 @@ if (tem("enviar")) {
     process.exit(1);
   }
   const token = await criarLinkAcesso(conta.telefone);
-  const base = (process.env.NEXT_PUBLIC_URL_APP ?? "https://app.zaplens.online").replace(/\/$/, "");
+  const base = (process.env.URL_APP ?? process.env.NEXT_PUBLIC_URL_APP ?? "https://app.zaplens.online").replace(/\/$/, "");
   await enviarAcesso({
     email: conta.email,
     nome: conta.comprador,
