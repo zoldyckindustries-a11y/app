@@ -4,6 +4,12 @@
 
 	// Nome do Worker na Cloudflare. Precisa ser o nome REAL do Worker, não o
 	// do pacote: é ele que o self-reference abaixo tem que repetir.
+	//
+	// É "app" porque é assim que o Worker se chama no painel — o projeto do
+	// Workers Builds define o nome, e o CI sobrescreve o que estiver aqui.
+	// Com "plataforma" neste campo o deploy subia o Worker como "app" e o
+	// WORKER_SELF_REFERENCE abaixo procurava um "plataforma" que nunca
+	// existiu, derrubando o deploy inteiro (erro 10143).
 	"name": "app",
 
 	"compatibility_date": "2026-08-01",
@@ -34,7 +40,7 @@
 			// `service` tem que ser EXATAMENTE igual ao `name` acima.
 			// https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "plataforma"
+			"service": "app"
 		}
 	],
 
