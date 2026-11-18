@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: theme("colors.base.DEFAULT");
+  color: theme("colors.texto.DEFAULT");
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Papel de parede do WhatsApp, bem apagado. É o que faz um bloco de conversa
+   parecer um print do aparelho e não uma tabela de dados. */
+.papel-conversa {
+  background-color: theme("colors.base.DEFAULT");
+  background-image: radial-gradient(
+      circle at 20% 20%,
+      rgba(37, 211, 102, 0.045),
+      transparent 55%
+    ),
+    radial-gradient(circle at 80% 70%, rgba(37, 211, 102, 0.03), transparent 50%);
+}
+
+/* Malha discreta para o quadro do mapa e das mídias: dá superfície ao bloco
+   sem inventar uma imagem que não existe. */
+.malha {
+  background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 22px,
+      rgba(255, 255, 255, 0.045) 22px,
+      rgba(255, 255, 255, 0.045) 23px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 30px,
+      rgba(255, 255, 255, 0.045) 30px,
+      rgba(255, 255, 255, 0.045) 31px
+    );
+}
+
+/* Esqueleto das seções ainda não liberadas.
+   O conteúdo bloqueado não chega ao navegador — não existe texto para
+   desfocar. Então o lugar dele mostra a forma do que vem, varrida por um
+   brilho: é a linguagem de "processando" de um painel de verdade, em vez do
+   hachurado de aviso que parecia um erro. */
+.esqueleto {
+  position: relative;
+  overflow: hidden;
+  background: theme("colors.base.panel");
+}
+
+.esqueleto::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: brilho 2.4s ease-in-out infinite;
+}
+
+@keyframes brilho {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto::after {
+    animation: none;
+  }
+  .animate-subir,
+  .animate-pulsar,
+  .animate-eco {
+    animation: none !important;
+  }
+}
+
+/* O índice das seções rola na horizontal no celular; a barra padrão do
+   Windows corta o desenho. */
+.sem-barra {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sem-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* Foco visível em tudo que recebe teclado — a área logada é usada por gente
+   que volta várias vezes, e o Tailwind sozinho não cobre isso. */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid theme("colors.zap.DEFAULT");
+  outline-offset: 2px;
+  border-radius: 6px;
+}

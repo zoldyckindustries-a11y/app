@@ -1,0 +1,49 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+
+	// Nome do Worker na Cloudflare. Precisa ser o nome REAL do Worker, não o
+	// do pacote: é ele que o self-reference abaixo tem que repetir.
+	"name": "plataforma",
+
+	"compatibility_date": "2026-08-01",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+	// Mantém a URL .workers.dev viva. Declarar `routes` desliga o subdomínio
+	// workers.dev por padrão, e é bom ter a segunda porta de entrada enquanto
+	// o domínio não está propagado.
+	"workers_dev": true,
+
+	// O subdomínio importa: o cookie que o funil grava tem
+	// `Domain=.zaplens.online`, então qualquer host sob esse domínio consegue
+	// ler quem é a pessoa e deixá-la entrar sem digitar nada.
+	"routes": [
+		{
+			"pattern": "app.zaplens.online",
+			"custom_domain": true
+		}
+	],
+
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+
+	"services": [
+		{
+			// `service` tem que ser EXATAMENTE igual ao `name` acima.
+			// https://opennext.js.org/cloudflare/caching
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "plataforma"
+		}
+	],
+
+	"images": {
+		"binding": "IMAGES"
+	}
+
+	// Segredos de runtime não entram neste arquivo:
+	//   npx wrangler secret put DATABASE_URL   (obrigatório — Neon)
+	//   npx wrangler secret put REDIS_URL      (opcional — retrato do lead)
+	// Local: .dev.vars ou .env.local.
+}
