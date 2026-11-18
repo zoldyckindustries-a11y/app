@@ -4,7 +4,7 @@
 
 	// Nome do Worker na Cloudflare. Precisa ser o nome REAL do Worker, não o
 	// do pacote: é ele que o self-reference abaixo tem que repetir.
-	"name": "plataforma",
+	"name": "app",
 
 	"compatibility_date": "2026-08-01",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
